@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق حافظني - منصة إدارة المدارس القرآنية</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .quran-font { font-family: 'Amiri', serif; }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printBarcodesContainer, #printBarcodesContainer * {
+                visibility: visible;
+            }
+            #printBarcodesContainer {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header / Navbar -->
+    <header class="bg-emerald-800 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="bg-emerald-700 p-2 rounded-xl border border-emerald-600">
+                    <span class="quran-font text-2xl font-bold">📖</span>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">تطبيق حافظني</h1>
+                    <p class="text-xs text-emerald-200">منصة إدارة ومتابعة الحفظ القرآني</p>
+                </div>
+            </div>
+            <!-- Role Switcher for Prototype Testing -->
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-emerald-200 hidden sm:inline">تبديل المنصة (تجريبي):</span>
+                <select id="roleSwitcher" onchange="switchRole(this.value)" class="bg-emerald-900 text-white text-xs sm:text-sm px-3 py-1.5 rounded-lg border border-emerald-700 focus:outline-none cursor-pointer">
+                    <option value="teacher">منصة المحفظ (المعلم)</option>
+                    <option value="parent">منصة الأب (المتابعة)</option>
+                    <option value="director">منصة مدير المدرسة</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6">
+
+        <!-- ==================== TEACHER PORTAL ==================== -->
+        <div id="teacherPortal" class="portal-view space-y-6">
+            <!-- Welcome Bar & Stats -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full">المحفظ / الأستاذ</span>
+                    <h2 class="text-2xl font-bold mt-2">أهلاً بك، الأستاذ أحمد</h2>
+                    <p class="text-sm text-slate-500">حلقة الإمام ورش - مسجد الرحمة</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="openModal('addStudentModal')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2 shadow-sm">
+                        <span>➕</span> إضافة تلميذ جديد
+                    </button>
+                    <button onclick="printAllBarcodes()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2 shadow-sm">
+                        <span>🖨️</span> طباعة الباركود
+                    </button>
+                    <button onclick="openModal('broadcastModal')" class="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2 shadow-sm">
+                        <span>📢</span> نشر تنبيه/إعلان
+                    </button>
+                </div>
+            </div>
+
+            <!-- Students List & Evaluation Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Students Table/Cards -->
+                <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-lg text-slate-700">قائمة تلاميذ الحلقة</h3>
+                        <span class="text-xs bg-slate-100 px-3 py-1 rounded-full text-slate-600">إجمالي التلاميذ: 12</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <!-- Student Item 1 -->
+                        <div class="flex items-center justify-between p-4 bg-slate-50 hover:bg-emerald-50/50 rounded-xl border border-slate-100 transition">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold">ع</div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">عبد الرحمن أحمد</h4>
+                                    <p class="text-xs text-slate-500">آخر تسميع: سورة البقرة (آية 45 - 60)</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="text-left hidden sm:block">
+                                    <span class="text-xs font-semibold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-md">متقن (ممتاز)</span>
+                                </div>
+                                <button onclick="selectStudentForEval('عبد الرحمن أحمد')" class="bg-emerald-800 hover:bg-emerald-900 text-white text-xs px-3 py-2 rounded-lg transition">
+                                    تقييم الحفظ 📝
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Student Item 2 -->
+                        <div class="flex items-center justify-between p-4 bg-slate-50 hover:bg-emerald-50/50 rounded-xl border border-slate-100 transition">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold">م</div>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">محمد أمين</h4>
+                                    <p class="text-xs text-slate-500">آخر تسميع: سورة آل عمران (آية 10 - 25)</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="text-left hidden sm:block">
+                                    <span class="text-xs font-semibold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-md">يحتاج مراجعة</span>
+                                </div>
+                                <button onclick="selectStudentForEval('محمد أمين')" class="bg-emerald-800 hover:bg-emerald-900 text-white text-xs px-3 py-2 rounded-lg transition">
+                                    تقييم الحفظ 📝
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Evaluation Panel (The Quran Index Feature) -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-lg text-slate-700 mb-2">الفهرس التفاعلي للتسميع</h3>
+                        <p class="text-xs text-slate-500 mb-4" id="selectedStudentText">اختر تلميذاً لتسجيل الحفظ أو المراجعة.</p>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">السورة القرآنية</label>
+                                <select class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                    <option>سورة البقرة</option>
+                                    <option>سورة آل عمران</option>
+                                    <option>سورة النساء</option>
+                                    <option>سورة المائدة</option>
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">من الآية</label>
+                                    <input type="number" value="1" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-600 mb-1">إلى الآية</label>
+                                    <input type="number" value="15" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2 focus:outline-none">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 mb-1">نوع التقييم</label>
+                                <select class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none">
+                                    <option>🌟 ممتاز ومتقن</option>
+                                    <option>👍 جيد (يحتاج تثبيت قليل)</option>
+                                    <option>⚠️ ضعيف (يجب الإعادة)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="alert('تم حفظ التقييم بنجاح وإرساله للوحة الأب فوراً!')" class="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl transition text-sm shadow-sm">
+                        حفظ وإرسال التقييم للأب 🚀
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== PARENT PORTAL ==================== -->
+        <div id="parentPortal" class="portal-view hidden space-y-6">
+            <!-- Welcome Bar -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-1 rounded-full">منصة الآباء (للمتابعة)</span>
+                    <h2 class="text-2xl font-bold mt-2">مرحباً بك، السيد/ الأب الكريم</h2>
+                    <p class="text-sm text-slate-500">تتبع تقدم أبنائك المسجلين في مدرسة الإمام ورش</p>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-xl text-xs flex items-center gap-2">
+                    <span>🔔</span> تنبيه جديد: غياب معلم الحلقة غداً الأحد.
+                </div>
+            </div>
+
+            <!-- Children Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Child 1 Card -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 space-y-4">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-lg">ع</div>
+                            <div>
+                                <h3 class="font-bold text-lg text-slate-800">عبد الرحمن أحمد</h3>
+                                <p class="text-xs text-slate-500">حلقة الأستاذ أحمد</p>
+                            </div>
+                        </div>
+                        <span class="bg-emerald-100 text-emerald-800 text-xs px-3 py-1 rounded-full font-semibold">نسبة الحفظ: 35%</span>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div>
+                        <div class="flex justify-between text-xs text-slate-600 mb-1">
+                            <span>الختم العام</span>
+                            <span>10 أجزاء من 30</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                            <div class="bg-emerald-600 h-2.5 rounded-full" style="width: 35%"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-2">
+                        <h4 class="text-xs font-bold text-slate-700 uppercase">آخر تقييم من المحفظ اليوم:</h4>
+                        <p class="text-sm text-slate-700 font-medium">سورة البقرة (الآيات 45 - 60)</p>
+                        <div class="flex justify-between items-center text-xs pt-1">
+                            <span class="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded">التقييم: ممتاز 🌟</span>
+                            <span class="text-slate-400">منذ ساعتين</span>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-3">
+                        <h4 class="text-xs font-bold text-indigo-700 mb-1">📌 واجب المراجعة المنزلية (مع الأب):</h4>
+                        <p class="text-xs text-slate-600">مراجعة سورة آل عمران من الآية 1 إلى الآية 20 في البيت.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== DIRECTOR PORTAL ==================== -->
+        <div id="directorPortal" class="portal-view hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full">منصة المدير</span>
+                <h2 class="text-2xl font-bold mt-2">إدارة مدرسة الإمام ورش</h2>
+                <p class="text-sm text-slate-500">إدارة المحفظين، متابعة الإحصائيات، وإرسال التعاميم الإدارية.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 text-center">
+                    <p class="text-slate-500 text-xs">إجمالي المحفظين</p>
+                    <h3 class="text-3xl font-bold text-emerald-800 mt-2">6 محفظين</h3>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 text-center">
+                    <p class="text-slate-500 text-xs">إجمالي التلاميذ المسجلين</p>
+                    <h3 class="text-3xl font-bold text-emerald-800 mt-2">84 تلميذاً</h3>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 text-center">
+                    <p class="text-slate-500 text-xs">آباء قيد المتابعة</p>
+                    <h3 class="text-3xl font-bold text-emerald-800 mt-2">78 ولي أمر</h3>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Print Barcodes Container (Hidden by default, used for printing) -->
+    <div id="printBarcodesContainer" class="hidden">
+        <h2 style="text-align: center; font-family: 'Cairo', sans-serif;">بطاقات الباركود للتلاميذ</h2>
+        <div id="barcodesList" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 20px;">
+        </div>
+    </div>
+
+    <!-- Modals for Interactive Simulation -->
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-800">إضافة تلميذ جديد وربطه بالأب</h3>
+                <button onclick="closeModal('addStudentModal')" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">اسم التلميذ الكامل</label>
+                    <input type="text" placeholder="مثال: يوسف أحمد" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">عمر التلميذ</label>
+                    <input type="number" placeholder="مثال: 10 سنوات" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">البريد الإلكتروني لولي الأمر (الأب)</label>
+                    <input type="email" placeholder="parent@example.com" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none">
+                    <p class="text-[10px] text-slate-400 mt-1">سيتم إرسال رابط دعوة تلقائي عبر الإيميل للأب لإنشاء حسابه ومتابعة ابنه.</p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('addStudentModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold">إلغاء</button>
+                <button onclick="alert('تمت إضافة التلميذ وإرسال رابط الدعوة للأب بنجاح!'); closeModal('addStudentModal');" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold">إرسال الدعوة والحفظ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Broadcast Modal -->
+    <div id="broadcastModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg text-slate-800">نشر تنبيه أو إعلان للآباء</h3>
+                <button onclick="closeModal('broadcastModal')" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">عنوان التنبيه</label>
+                    <input type="text" placeholder="مثال: غياب معلم أو مسابقة قرآنية" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">محتوى الرسالة</label>
+                    <textarea rows="3" placeholder="اكتب تفاصيل التنبيه هنا..." class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:outline-none"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeModal('broadcastModal')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold">إلغاء</button>
+                <button onclick="alert('تم إرسال التنبيه فوراً لهواتف جميع الآباء!'); closeModal('broadcastModal');" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-semibold">نشر وتنبيه الآباء 📢</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-100 py-4 text-center text-xs text-slate-400 mt-auto">
+        تطبيق "حافظني" لإدارة المدارس القرآنية &copy; 2026 - جميع الحقوق محفوظة
+    </footer>
+
+    <!-- Prototype Logic Script -->
+    <script>
+        function switchRole(role) {
+            document.querySelectorAll('.portal-view').forEach(el => el.classList.add('hidden'));
+            if (role === 'teacher') {
+                document.getElementById('teacherPortal').classList.remove('hidden');
+            } else if (role === 'parent') {
+                document.getElementById('parentPortal').classList.remove('hidden');
+            } else if (role === 'director') {
+                document.getElementById('directorPortal').classList.remove('hidden');
+            }
+        }
+
+        function selectStudentForEval(studentName) {
+            document.getElementById('selectedStudentText').innerText = 'جاري تقييم التلميذ: ' + studentName;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function printAllBarcodes() {
+            const students = [
+                { id: "1001", name: "عبد الرحمن أحمد" },
+                { id: "1002", name: "محمد أمين" },
+                { id: "1003", name: "يوسف أحمد" },
+                { id: "1004", name: "أحمد محمود" },
+                { id: "1005", name: "عمر خالد" },
+                { id: "1006", name: "علي حسن" },
+                { id: "1007", name: "حسين علي" },
+                { id: "1008", name: "محمود سعيد" },
+                { id: "1009", name: "إبراهيم خليل" },
+                { id: "1010", name: "مصطفى كمال" },
+                { id: "1011", name: "سليمان داود" },
+                { id: "1012", name: "يونس زكريا" }
+            ];
+
+            const barcodesList = document.getElementById('barcodesList');
+            barcodesList.innerHTML = ''; // Clear previous barcodes
+
+            students.forEach(student => {
+                const barcodeContainer = document.createElement('div');
+                barcodeContainer.style.textAlign = 'center';
+                barcodeContainer.style.border = '1px solid #ccc';
+                barcodeContainer.style.padding = '10px';
+                barcodeContainer.style.borderRadius = '8px';
+                barcodeContainer.style.backgroundColor = '#fff';
+
+                const nameLabel = document.createElement('p');
+                nameLabel.innerText = student.name;
+                nameLabel.style.fontWeight = 'bold';
+                nameLabel.style.marginBottom = '5px';
+                nameLabel.style.fontFamily = "'Cairo', sans-serif";
+
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.id = `barcode-${student.id}`;
+
+                barcodeContainer.appendChild(nameLabel);
+                barcodeContainer.appendChild(svg);
+                barcodesList.appendChild(barcodeContainer);
+
+                JsBarcode(`#barcode-${student.id}`, student.id, {
+                    format: "CODE128",
+                    displayValue: true,
+                    fontSize: 14,
+                    width: 2,
+                    height: 50
+                });
+            });
+
+            // Show container, print, then hide
+            const printContainer = document.getElementById('printBarcodesContainer');
+            printContainer.classList.remove('hidden');
+
+            // Allow DOM to update before printing
+            setTimeout(() => {
+                window.print();
+                printContainer.classList.add('hidden');
+            }, 500);
+        }
+    </script>
+</body>
+</html>
